@@ -1,0 +1,31 @@
+{
+  "name": "geo-tool",
+  "version": "0.1.0",
+  "description": "GEO/AEO toolkit - track Google rankings and AI engine citations, find prompt gaps, get recommendations",
+  "private": true,
+  "type": "commonjs",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "migrate": "node server/db.js --migrate",
+    "test:smoke": "node server/test/smoke.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "axios": "^1.7.7",
+    "better-sqlite3": "^13.0.3",
+    "cheerio": "^1.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "morgan": "^1.10.0",
+    "node-cron": "^3.0.3",
+    "playwright": "^1.48.0"
+  },
+  "optionalDependencies": {
+    "openai": "^4.67.0"
+  }
+}

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GEO/AEO Tool</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <a href="#/">GEO/AEO</a>
+      <span class="muted small">track rankings & AI citations</span>
+    </div>
+    <nav class="topnav">
+      <a href="#/" data-nav>Domains</a>
+      <a href="#/runs" data-nav>Runs</a>
+      <a href="#/settings" data-nav>Settings</a>
+    </nav>
+  </header>
+
+  <main id="app"></main>
+
+  <template id="tpl-domains">
+    <section class="page">
+      <div class="page-head">
+        <h1>Domains</h1>
+        <button class="btn primary" id="add-domain">+ Add domain</button>
+      </div>
+      <div class="grid domains" id="domain-list"></div>
+    </section>
+  </template>
+
+  <template id="tpl-domain-card">
+    <a class="card domain-card" href="#">
+      <div class="card-head">
+        <h3 class="domain-name"></h3>
+        <span class="badge"></span>
+      </div>
+      <p class="muted small domain-url"></p>
+      <div class="card-stats">
+        <span><b class="stat-prompts">0</b> prompts</span>
+        <span><b class="stat-competitors">0</b> competitors</span>
+        <span><b class="stat-recs">0</b> recs</span>
+      </div>
+    </a>
+  </template>
+
+  <template id="tpl-domain">
+    <section class="page">
+      <div class="page-head">
+        <div>
+          <h1 class="d-name"></h1>
+          <p class="muted small d-url"></p>
+        </div>
+        <div class="row gap">
+          <button class="btn" id="recategorize">Re-categorize</button>
+          <button class="btn primary" id="track-now">Track now</button>
+        </div>
+      </div>
+
+      <div class="cat-box">
+        <div><span class="muted small">Category</span><div class="d-cat"></div></div>
+        <div><span class="muted small">Sub</span><div class="d-sub"></div></div>
+        <div><span class="muted small">Confidence</span><div class="d-conf"></div></div>
+      </div>
+
+      <nav class="tabs">
+        <a href="#/d/:id/dashboard" data-tab="dashboard">Dashboard</a>
+        <a href="#/d/:id/prompts" data-tab="prompts">Prompts</a>
+        <a href="#/d/:id/competitors" data-tab="competitors">Competitors</a>
+        <a href="#/d/:id/runs" data-tab="runs">Runs</a>
+        <a href="#/d/:id/recommendations" data-tab="recommendations">Recommendations</a>
+      </nav>
+
+      <div class="tab-body"></div>
+    </section>
+  </template>
+
+  <template id="tpl-dashboard">
+    <div class="grid stats">
+      <div class="card stat"><div class="muted small">Prompts</div><div class="big s-prompts">0</div></div>
+      <div class="card stat"><div class="muted small">Candidates</div><div class="big s-candidates">0</div></div>
+      <div class="card stat"><div class="muted small">Competitors</div><div class="big s-competitors">0</div></div>
+      <div class="card stat"><div class="muted small">Open recs</div><div class="big s-recs">0</div></div>
+      <div class="card stat"><div class="muted small">Last run</div><div class="big s-lastrun">—</div></div>
+    </div>
+
+    <h2>Per-engine citation rate</h2>
+    <div class="card">
+      <table class="data">
+        <thead><tr><th>Engine</th><th>Cited</th><th>Total</th><th>Rate</th><th>Top10</th><th>Best pos</th></tr></thead>
+        <tbody class="engine-rows"></tbody>
+      </table>
+    </div>
+
+    <h2>Gaps (not cited anywhere)</h2>
+    <div class="card gaps"></div>
+
+    <h2>Wins (cited everywhere)</h2>
+    <div class="card wins"></div>
+  </template>
+
+  <template id="tpl-prompts">
+    <div class="row gap spread">
+      <h2>Prompts</h2>
+      <div class="row gap">
+        <button class="btn" id="research-prompts">+ Auto-research</button>
+        <button class="btn primary" id="add-prompt">+ Add manually</button>
+      </div>
+    </div>
+    <div class="card">
+      <table class="data">
+        <thead><tr><th>Prompt</th><th>Intent</th><th>Source</th><th>Status</th><th></th></tr></thead>
+        <tbody class="prompt-rows"></tbody>
+      </table>
+    </div>
+  </template>
+
+  <template id="tpl-competitors">
+    <div class="row gap spread">
+      <h2>Competitors</h2>
+      <div class="row gap">
+        <button class="btn" id="research-competitors">+ Auto-find</button>
+        <button class="btn primary" id="add-competitor">+ Add manually</button>
+      </div>
+    </div>
+    <div class="card">
+      <table class="data">
+        <thead><tr><th>Domain</th><th>Name</th><th>Source</th><th>Overlap</th><th>Notes</th></tr></thead>
+        <tbody class="competitor-rows"></tbody>
+      </table>
+    </div>
+  </template>
+
+  <template id="tpl-runs">
+    <div class="row gap spread">
+      <h2>Tracking runs</h2>
+    </div>
+    <div class="card">
+      <table class="data">
+        <thead><tr><th>ID</th><th>Started</th><th>Duration</th><th>Status</th><th>Progress</th><th>Engines</th></tr></thead>
+        <tbody class="run-rows"></tbody>
+      </table>
+    </div>
+    <div class="run-detail"></div>
+  </template>
+
+  <template id="tpl-recommendations">
+    <div class="row gap spread">
+      <h2>Recommendations</h2>
+      <button class="btn" id="refresh-recs">Refresh</button>
+    </div>
+    <div class="rec-list"></div>
+  </template>
+
+  <template id="tpl-runs-all">
+    <section class="page">
+      <h1>All runs</h1>
+      <div class="card">
+        <table class="data">
+          <thead><tr><th>ID</th><th>Domain</th><th>Started</th><th>Status</th><th>Progress</th></tr></thead>
+          <tbody class="rows"></tbody>
+        </table>
+      </div>
+    </section>
+  </template>
+
+  <template id="tpl-settings">
+    <section class="page">
+      <h1>Settings</h1>
+      <div class="card">
+        <h2>SerpAPI key</h2>
+        <p class="muted small">Required for Google, Bing and People-Also-Ask expansion.</p>
+        <div class="row gap">
+          <input type="password" id="serpapi-key" placeholder="SERPAPI_KEY" />
+          <button class="btn" id="save-serpapi">Save</button>
+          <button class="btn ghost" id="test-serpapi">Test</button>
+        </div>
+        <div id="serpapi-status" class="muted small"></div>
+      </div>
+
+      <div class="card">
+        <h2>Track cron</h2>
+        <p class="muted small">Standard 5-field cron expression. Default: <code>0 6 * * *</code> (6 AM daily).</p>
+        <div class="row gap">
+          <input type="text" id="track-cron" placeholder="0 6 * * *" />
+          <button class="btn" id="save-cron">Save</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Enabled engines</h2>
+        <p class="muted small">Disabled engines will be skipped from every run.</p>
+        <div class="engine-toggles"></div>
+      </div>
+    </section>
+  </template>
+
+  <script src="/app.js"></script>
+</body>
+</html>
