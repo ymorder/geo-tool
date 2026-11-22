@@ -1,5 +1,7 @@
 # GEO/AEO Tool
 
+> **Archived.** Replaced by a newer project, GEO Tracker. This repo is kept for reference and is no longer updated.
+
 A practical toolkit for tracking where your domain appears in Google rankings and across the major AI answer engines (Perplexity, Microsoft Copilot, You.com, DeepSeek, Gemini, ChatGPT, Claude, Grok). Includes auto-categorization, prompt research, competitor discovery and a recommendation engine that explains where you are missing and what to do about it.
 
 ## Features
