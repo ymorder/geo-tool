@@ -4,7 +4,6 @@ require('dotenv').config();
 
 const path = require('path');
 const express = require('express');
-const cors = require('cors');
 const morgan = require('morgan');
 
 const { getSetting, setSetting } = require('./db');
@@ -20,8 +19,32 @@ const enginesRoutes = require('./routes/engines');
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
+// This server stores session cookies and API keys, so by default only this
+// computer can reach it. Set HOST to override (not recommended).
+const HOST = process.env.HOST || '127.0.0.1';
+const LOCAL_HOSTNAMES = new Set(['localhost', '127.0.0.1', '[::1]', HOST]);
+const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
-app.use(cors());
+// Accept only requests addressed to this machine (blocks DNS rebinding) and,
+// when a browser says who is calling, only from the app's own pages.
+function localOnly(req, res, next) {
+  const host = req.headers.host || '';
+  const hostname = host.replace(/:\d+$/, '').toLowerCase();
+  const { origin } = req.headers;
+  const fetchSite = req.headers['sec-fetch-site'];
+  const badOrigin = origin !== undefined && origin !== `http://${host}`;
+  const crossSite =
+    fetchSite !== undefined &&
+    fetchSite !== 'same-origin' &&
+    fetchSite !== 'none' &&
+    (req.path.startsWith('/api') || !SAFE_METHODS.has(req.method));
+  if (!LOCAL_HOSTNAMES.has(hostname) || badOrigin || crossSite) {
+    return res.status(403).json({ error: 'forbidden_origin' });
+  }
+  return next();
+}
+
+app.use(localOnly);
 app.use(express.json({ limit: '2mb' }));
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
@@ -96,8 +119,8 @@ function ensureDefaultSettings() {
 
 if (require.main === module) {
   ensureDefaultSettings();
-  app.listen(PORT, () => {
-    console.log(`geo-tool listening on http://localhost:${PORT}`);
+  app.listen(PORT, HOST, () => {
+    console.log(`geo-tool listening on http://${HOST === '127.0.0.1' ? 'localhost' : HOST}:${PORT}`);
     scheduler.start();
   });
 }

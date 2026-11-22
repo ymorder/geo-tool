@@ -17,13 +17,13 @@ try {
 const app = require('../index');
 const http = require('http');
 
-function get(path) {
+function get(path, headers = {}) {
   return new Promise((resolve, reject) => {
     const port = 0;
     const server = app.listen(port, () => {
       const { port: actualPort } = server.address();
       const req = http.request(
-        { hostname: '127.0.0.1', port: actualPort, path, method: 'GET' },
+        { hostname: '127.0.0.1', port: actualPort, path, method: 'GET', headers },
         (res) => {
           let body = '';
           res.on('data', (chunk) => (body += chunk));
@@ -89,6 +89,20 @@ function get(path) {
     if (r.status !== 200) throw new Error(`status ${r.status}`);
     if (!r.body.settings || !r.body.settings.config) throw new Error('missing settings');
   });
+
+  for (const [name, headers, want] of [
+    ['rejects other websites', { Origin: 'https://evil.example' }, 403],
+    ['rejects null origin', { Origin: 'null' }, 403],
+    ['rejects rebound host', { Host: 'evil.example' }, 403],
+    ['rejects cross-site fetch', { 'Sec-Fetch-Site': 'cross-site' }, 403],
+    ['rejects other local ports', { Host: 'localhost:3000', Origin: 'http://localhost:5173' }, 403],
+    ['accepts own pages', { Host: 'localhost:3000', Origin: 'http://localhost:3000', 'Sec-Fetch-Site': 'same-origin' }, 200],
+  ]) {
+    await check(name, async () => {
+      const r = await get('/api/settings', headers);
+      if (r.status !== want) throw new Error(`status ${r.status}, expected ${want}`);
+    });
+  }
 
   if (failures) {
     console.error(`\n${failures} test(s) failed`);
